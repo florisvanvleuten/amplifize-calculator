@@ -3,20 +3,6 @@
   "functions": {
     "api/index.js": { "maxDuration": 30 }
   },
-  "routes": [
-    {
-      "src": "/calculator.html",
-      "dest": "/public/calculator.html"
-    },
-    {
-      "src": "/",
-      "dest": "/public/calculator.html"
-    },
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/index.js"
-    }
-  ],
   "headers": [
     {
       "source": "/api/(.*)",
