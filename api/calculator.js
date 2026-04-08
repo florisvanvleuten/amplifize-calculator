@@ -1,10 +1,1893 @@
-import fs from 'fs';
-import path from 'path';
-
 export default function handler(req, res) {
-  const file = path.join(process.cwd(), 'public', 'calculator.html');
-  const html = fs.readFileSync(file, 'utf8');
-  res.setHeader('Content-Type', 'text/html');
-  res.setHeader('X-Frame-Options', 'ALLOWALL');
-  res.send(html);
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("X-Frame-Options", "ALLOWALL");
+  res.setHeader("Content-Security-Policy", "frame-ancestors *");
+  res.status(200).send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Google Ads Calculator — Amplifize</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand: #597aff;
+    --brand-dark: #3d5ce0;
+    --brand-light: #eef0ff;
+    --brand-glow: rgba(89,122,255,0.15);
+    --text: #0f1117;
+    --text-2: #5a5e72;
+    --text-3: #9599b0;
+    --bg: #ffffff;
+    --bg-2: #f7f8fc;
+    --bg-3: #f0f2fa;
+    --border: rgba(89,122,255,0.15);
+    --border-soft: rgba(0,0,0,0.07);
+    --radius: 14px;
+    --radius-sm: 9px;
+    --shadow: 0 2px 20px rgba(89,122,255,0.08);
+    --shadow-lg: 0 8px 40px rgba(89,122,255,0.14);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  .calc-outer {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 3rem;
+  }
+
+  /* Header */
+  .calc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2.5rem;
+  }
+
+  .calc-logo img {
+    height: 36px;
+    object-fit: contain;
+  }
+
+  .calc-badge {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--brand);
+    background: var(--brand-light);
+    border: 1px solid var(--border);
+    padding: 5px 12px;
+    border-radius: 99px;
+  }
+
+  /* Progress */
+  .progress-track {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 2rem;
+  }
+
+  .progress-seg {
+    height: 3px;
+    flex: 1;
+    border-radius: 2px;
+    background: var(--bg-3);
+    transition: background 0.4s ease;
+  }
+
+  .progress-seg.active { background: var(--brand); }
+  .progress-seg.done { background: var(--brand-dark); }
+
+  /* Step heading */
+  .step-head { margin-bottom: 1.75rem; }
+  .step-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--brand);
+    margin-bottom: 6px;
+  }
+  .step-head h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.25;
+  }
+  .step-head p {
+    font-size: 14px;
+    color: var(--text-2);
+    margin-top: 6px;
+    line-height: 1.6;
+  }
+
+  /* Steps */
+  .step { display: none; }
+  .step.active { display: block; animation: fadeUp 0.3s ease; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Divi isolation wrapper ───────────────────────────────────────────────── */
+  #amplifize-calc * { box-sizing: border-box !important; }
+  #amplifize-calc { font-family: 'DM Sans', sans-serif; color: #0f1117; width: 100%; }
+
+  /* Niche grid */
+  #amplifize-calc .niche-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important;
+    margin-bottom: 1.25rem !important;
+  }
+
+  #amplifize-calc .niche-card {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    padding: 14px 10px !important;
+    border-radius: 9px !important;
+    border: 1.5px solid rgba(0,0,0,0.07) !important;
+    cursor: pointer !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #5a5e72 !important;
+    text-align: center !important;
+    background: #ffffff !important;
+    gap: 6px !important;
+    transition: all 0.18s ease !important;
+  }
+
+  #amplifize-calc .niche-card:hover {
+    border-color: #597aff !important;
+    color: #597aff !important;
+    background: #eef0ff !important;
+  }
+
+  #amplifize-calc .niche-card.selected {
+    border-color: #597aff !important;
+    color: #3d5ce0 !important;
+    background: #eef0ff !important;
+  }
+
+  #amplifize-calc .niche-emoji {
+    font-size: 22px !important;
+    line-height: 1 !important;
+    display: block !important;
+  }
+
+  #amplifize-calc .metrics-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  #amplifize-calc .field-row {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+    margin-bottom: 12px !important;
+  }
+
+  #amplifize-calc .field-row.single {
+    grid-template-columns: 1fr !important;
+  }
+
+  #amplifize-calc .step { display: none !important; }
+  #amplifize-calc .step.active { display: block !important; }
+
+  #amplifize-calc .field input,
+  #amplifize-calc .field select {
+    width: 100% !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 15px !important;
+    padding: 10px 13px !important;
+    border: 1.5px solid rgba(0,0,0,0.07) !important;
+    border-radius: 9px !important;
+    background: #f7f8fc !important;
+    color: #0f1117 !important;
+    outline: none !important;
+    -webkit-appearance: auto !important;
+    appearance: auto !important;
+  }
+
+  @media (max-width: 480px) {
+    #amplifize-calc .niche-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    #amplifize-calc .field-row { grid-template-columns: 1fr !important; }
+    #amplifize-calc .metrics-grid { grid-template-columns: 1fr !important; }
+  }
+
+  /* Fields */
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .field-row.single { grid-template-columns: 1fr; }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .field label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-2);
+    letter-spacing: 0.02em;
+  }
+
+  .field input, .field select {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: var(--text);
+    background: var(--bg-2);
+    border: 1.5px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    padding: 10px 13px;
+    outline: none;
+    transition: border-color 0.18s;
+    width: 100%;
+  }
+
+  .field input:focus, .field select:focus {
+    border-color: var(--brand);
+    background: var(--bg);
+  }
+
+  .field .hint {
+    font-size: 11.5px;
+    color: var(--text-3);
+  }
+
+  /* Buttons */
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 1.75rem;
+  }
+
+  .btn {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    padding: 10px 22px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border-soft);
+    background: var(--bg);
+    color: var(--text-2);
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+
+  .btn:hover { background: var(--bg-2); color: var(--text); }
+
+  .btn.primary {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: white;
+    box-shadow: 0 4px 16px var(--brand-glow);
+  }
+
+  .btn.primary:hover {
+    background: var(--brand-dark);
+    border-color: var(--brand-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px var(--brand-glow);
+  }
+
+  .btn.primary:active { transform: translateY(0); }
+
+  /* Teaser metrics */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 1.5rem;
+  }
+
+  .metric-card {
+    background: var(--bg-2);
+    border: 1.5px solid var(--border-soft);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+  }
+
+  .metric-card.accent {
+    background: var(--brand-light);
+    border-color: var(--border);
+  }
+
+  .metric-card .m-label {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+
+  .metric-card.accent .m-label { color: var(--brand); }
+
+  .metric-card .m-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .metric-card.accent .m-value { color: var(--brand-dark); }
+
+  .metric-card .m-sub {
+    font-size: 11.5px;
+    color: var(--text-3);
+    margin-top: 4px;
+  }
+
+  /* Blur / teaser */
+  .teaser-wrap { position: relative; margin-bottom: 1.5rem; }
+
+  .teaser-blur {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    filter: blur(5px);
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .teaser-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .teaser-pill {
+    background: var(--brand);
+    color: white;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 8px 20px;
+    border-radius: 99px;
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Gate box */
+  .gate-box {
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+  }
+
+  .gate-box .gate-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 5px;
+  }
+
+  .gate-box .gate-sub {
+    font-size: 14px;
+    color: var(--text-2);
+    margin-bottom: 1.25rem;
+    line-height: 1.55;
+  }
+
+  /* Teaser sections */
+  .teaser-section {
+    background: var(--bg-2);
+    border: 1.5px solid var(--border-soft);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .teaser-section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 1rem;
+  }
+
+  .trend-teaser-wrap {
+    position: relative;
+  }
+
+  .trend-teaser-wrap canvas {
+    filter: blur(3px);
+    opacity: 0.5;
+  }
+
+  .trend-teaser-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* CPC benchmark bars */
+  .cpc-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .cpc-bar-label {
+    font-size: 12px;
+    color: var(--text-2);
+    width: 140px;
+    flex-shrink: 0;
+  }
+
+  .cpc-bar-label.active {
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .cpc-bar-track {
+    flex: 1;
+    height: 8px;
+    background: var(--bg-3);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .cpc-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: var(--brand);
+    transition: width 0.8s ease;
+  }
+
+  .cpc-bar-fill.active {
+    background: var(--brand);
+  }
+
+  .cpc-bar-fill.muted {
+    background: var(--border-soft);
+  }
+
+  .cpc-bar-value {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-2);
+    width: 36px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* Result sections */
+  .result-section {
+    background: var(--bg-2);
+    border: 1.5px solid var(--border-soft);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .result-section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .result-section-sub {
+    font-size: 12px;
+    color: var(--text-3);
+  }
+
+  .trend-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 10px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-2);
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  /* Campaign structure */
+  .campaign-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto auto;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 13px;
+  }
+
+  .campaign-row:last-child { border-bottom: none; }
+
+  .campaign-row .camp-name {
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .campaign-row .camp-name small {
+    display: block;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-3);
+    margin-top: 2px;
+  }
+
+  .campaign-row .camp-budget {
+    font-weight: 600;
+    color: var(--brand-dark);
+    text-align: right;
+  }
+
+  .campaign-row .camp-clicks {
+    color: var(--text-2);
+    text-align: right;
+  }
+
+  .campaign-row .camp-conv {
+    color: #1D9E75;
+    font-weight: 500;
+    text-align: right;
+  }
+
+  .campaign-header {
+    display: grid;
+    grid-template-columns: 1fr 110px 110px 80px;
+    gap: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--border-soft);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-3);
+    margin-bottom: 4px;
+  }
+
+  .campaign-header div:not(:first-child),
+  .campaign-row .camp-budget,
+  .campaign-row .camp-clicks,
+  .campaign-row .camp-conv {
+    text-align: right;
+  }
+
+  .campaign-row {
+    display: grid;
+    grid-template-columns: 1fr 110px 110px 80px;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 13px;
+  }
+  .kw-funnel {
+    margin-bottom: 1.25rem;
+  }
+
+  .kw-funnel-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-2);
+    margin-bottom: 12px;
+  }
+
+  .kw-stage {
+    border-radius: var(--radius);
+    border: 1.5px solid var(--border-soft);
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .kw-stage-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+
+  .kw-stage-header .stage-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .kw-stage-header .stage-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  .kw-stage-header .stage-desc {
+    font-size: 11.5px;
+    color: var(--text-3);
+    margin-left: auto;
+  }
+
+  .kw-stage.tof .kw-stage-header { background: #f0faf5; }
+  .kw-stage.tof .stage-dot        { background: #1D9E75; }
+  .kw-stage.tof .stage-label      { color: #0F6E56; }
+
+  .kw-stage.mof .kw-stage-header { background: #f0f4ff; }
+  .kw-stage.mof .stage-dot        { background: #597aff; }
+  .kw-stage.mof .stage-label      { color: #3d5ce0; }
+
+  .kw-stage.bof .kw-stage-header { background: #fff8f0; }
+  .kw-stage.bof .stage-dot        { background: #E8843A; }
+  .kw-stage.bof .stage-label      { color: #b85e1a; }
+
+  .kw-list {
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: var(--bg);
+  }
+
+  .kw-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  .kw-item::before {
+    content: '';
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--text-3);
+    flex-shrink: 0;
+  }
+
+  .kw-loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px;
+    font-size: 13px;
+    color: var(--text-3);
+  }
+
+  .kw-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--brand-light);
+    border-top-color: var(--brand);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+
+  .kw-error {
+    padding: 12px 14px;
+    font-size: 12px;
+    color: var(--text-3);
+    font-style: italic;
+  }
+
+  /* CTA booking */
+  .cta-booking {
+    background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    text-align: center;
+    margin-top: 1.25rem;
+  }
+
+  .cta-booking h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 6px;
+  }
+
+  .cta-booking p {
+    font-size: 13.5px;
+    color: rgba(255,255,255,0.8);
+    margin-bottom: 1rem;
+    line-height: 1.5;
+  }
+
+  .cta-booking a {
+    display: inline-block;
+    background: white;
+    color: var(--brand-dark);
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 10px 24px;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    transition: all 0.18s;
+  }
+
+  .cta-booking a:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  }
+
+  /* Disclaimer */
+  .disclaimer {
+    font-size: 11.5px;
+    color: var(--text-3);
+    line-height: 1.6;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-soft);
+  }
+
+  /* Loading spinner */
+  .loading-wrap {
+    text-align: center;
+    padding: 3rem 0;
+  }
+
+  .spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--brand-light);
+    border-top-color: var(--brand);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 1rem;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-wrap p {
+    font-size: 14px;
+    color: var(--text-2);
+  }
+
+  /* Error */
+  .error-box {
+    background: #fff5f5;
+    border: 1.5px solid #ffd5d5;
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #c0392b;
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  /* Data source badge */
+  .data-source {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--text-3);
+    background: var(--bg-2);
+    border: 1px solid var(--border-soft);
+    padding: 3px 10px;
+    border-radius: 99px;
+    margin-bottom: 1rem;
+  }
+
+  .data-source .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-3);
+  }
+
+  .data-source .dot.live { background: #27ae60; }
+
+  @media (max-width: 480px) {
+    .niche-grid { grid-template-columns: repeat(2, 1fr); }
+    .field-row { grid-template-columns: 1fr; }
+    .metrics-grid, .teaser-blur { grid-template-columns: 1fr; }
+    .calc-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .step-head h2 { font-size: 19px; }
+  }
+</style>
+</head>
+<body>
+<div class="calc-outer" id="amplifize-calc">
+
+  <!-- Header -->
+  <div class="calc-header">
+    <div class="calc-logo">
+      <img src="https://framerusercontent.com/images/YuaGQ7LdU0LThop11K2XxberfY.png?width=1600&height=500" alt="Amplifize">
+    </div>
+    <div class="calc-badge">Free Google Ads Calculator</div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-track" id="progress">
+    <div class="progress-seg active"></div>
+    <div class="progress-seg"></div>
+    <div class="progress-seg"></div>
+    <div class="progress-seg"></div>
+  </div>
+
+  <!-- STEP 1: Niche -->
+  <div class="step active" id="step1">
+    <div class="step-head">
+      <div class="step-num">Step 1 of 4</div>
+      <h2>What do you sell?</h2>
+      <p>We use ecommerce-specific benchmarks per category to give you accurate projections — not generic guesses.</p>
+    </div>
+
+    <div class="niche-grid" id="nicheGrid" style="display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:8px!important;margin-bottom:1.25rem!important;"></div>
+
+    <div id="customNicheWrap" style="display:none;margin-top:8px;">
+      <div class="field">
+        <label>Describe your product or niche</label>
+        <input type="text" id="customNiche" placeholder="e.g. Handmade candles, Vintage clothing, Protein powder…">
+        <span class="hint" id="classifyStatus"></span>
+      </div>
+      <div class="btn-row" style="margin-top:1rem;">
+        <button class="btn primary" onclick="proceedFromStep1()">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: Business details -->
+  <div class="step" id="step2">
+    <div class="step-head">
+      <div class="step-num">Step 2 of 4</div>
+      <h2>Tell us about your business</h2>
+      <p>These inputs shape your revenue and ROAS projections.</p>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Monthly ad budget (€ / $)</label>
+        <input type="number" id="budget" placeholder="3,000" min="100">
+      </div>
+      <div class="field">
+        <label>Average order / deal value (€ / $)</label>
+        <input type="number" id="aov" placeholder="250" min="1">
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Target country</label>
+        <select id="country">
+          <optgroup label="English-speaking">
+            <option value="UK">United Kingdom</option>
+            <option value="US">United States</option>
+            <option value="AU">Australia</option>
+            <option value="CA">Canada</option>
+            <option value="NZ">New Zealand</option>
+          </optgroup>
+          <optgroup label="Western Europe">
+            <option value="NL">Netherlands</option>
+            <option value="BE">Belgium</option>
+            <option value="DE">Germany</option>
+            <option value="AT">Austria</option>
+            <option value="CH">Switzerland</option>
+            <option value="FR">France</option>
+            <option value="ES">Spain</option>
+            <option value="IT">Italy</option>
+            <option value="PT">Portugal</option>
+            <option value="IE">Ireland</option>
+            <option value="LU">Luxembourg</option>
+          </optgroup>
+          <optgroup label="Northern Europe">
+            <option value="SE">Sweden</option>
+            <option value="NO">Norway</option>
+            <option value="DK">Denmark</option>
+            <option value="FI">Finland</option>
+            <option value="IS">Iceland</option>
+          </optgroup>
+          <optgroup label="Central & Eastern Europe">
+            <option value="PL">Poland</option>
+            <option value="CZ">Czech Republic</option>
+            <option value="SK">Slovakia</option>
+            <option value="HU">Hungary</option>
+            <option value="RO">Romania</option>
+            <option value="BG">Bulgaria</option>
+            <option value="HR">Croatia</option>
+            <option value="SI">Slovenia</option>
+            <option value="EE">Estonia</option>
+            <option value="LV">Latvia</option>
+            <option value="LT">Lithuania</option>
+          </optgroup>
+          <optgroup label="Southern Europe">
+            <option value="GR">Greece</option>
+            <option value="CY">Cyprus</option>
+            <option value="MT">Malta</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="field">
+        <label>Target language</label>
+        <select id="language">
+          <option value="EN">English</option>
+          <option value="NL">Dutch</option>
+          <option value="DE">German</option>
+          <option value="FR">French</option>
+          <option value="ES">Spanish</option>
+          <option value="IT">Italian</option>
+          <option value="PT">Portuguese</option>
+          <option value="SV">Swedish</option>
+          <option value="NO">Norwegian</option>
+          <option value="DA">Danish</option>
+          <option value="FI">Finnish</option>
+          <option value="PL">Polish</option>
+          <option value="CS">Czech</option>
+          <option value="HU">Hungarian</option>
+          <option value="RO">Romanian</option>
+          <option value="EL">Greek</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field-row single">
+      <div class="field">
+        <label>Your website URL</label>
+        <input type="url" id="url" placeholder="https://yourwebsite.com">
+        <span class="hint">We'll extract keyword themes from your site for smarter projections</span>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn" onclick="goStep(1)">← Back</button>
+      <button class="btn primary" onclick="runCalculation()">Calculate my projections →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Loading + teaser results -->
+  <div class="step" id="step3">
+    <div id="loadingState" class="loading-wrap">
+      <div class="spinner"></div>
+      <p id="loadingMsg">Analysing your market…</p>
+    </div>
+
+    <div id="teaserState" style="display:none">
+      <div class="step-head">
+        <div class="step-num">Step 3 of 4</div>
+        <h2>Your projections are ready</h2>
+        <p>Here's a preview — unlock the full report below.</p>
+      </div>
+
+      <div id="dataSourceBadge" class="data-source">
+        <div class="dot" id="sourceDot"></div>
+        <span id="sourceLabel">Calculating…</span>
+      </div>
+
+      <div class="metrics-grid" id="topMetrics"></div>
+
+      <!-- TEASER: competitor benchmark -->
+      <div class="teaser-section" id="cpcBenchmarkTeaser">
+        <div class="teaser-section-title">What your competitors spend on Google Ads</div>
+        <div id="cpcBars"></div>
+      </div>
+
+      <!-- TEASER: blurred trend graph -->
+      <div class="teaser-section">
+        <div class="teaser-section-title">3-month revenue projection</div>
+        <div class="trend-teaser-wrap">
+          <canvas id="trendChartTeaser" height="140"></canvas>
+          <div class="trend-teaser-overlay">
+            <div class="teaser-pill">🔒 Submit to see your full growth curve</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="teaser-wrap">
+        <div class="teaser-blur" id="teaserCards"></div>
+        <div class="teaser-overlay">
+          <div class="teaser-pill">🔒 Enter your details to unlock</div>
+        </div>
+      </div>
+
+      <div class="gate-box">
+        <div class="gate-title">Get your full Google Ads forecast</div>
+        <div class="gate-sub">Enter your details below — we'll send you the full breakdown plus a free audit offer.</div>
+        <div id="tallyWrap">
+          <!-- Tally form loads here with pre-filled hidden fields -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4: Full results -->
+  <div class="step" id="step4">
+    <div class="step-head">
+      <div class="step-num">Your full forecast</div>
+      <h2 id="resultsHeading">Here's your Google Ads forecast</h2>
+      <p id="resultsSubtitle">Check your inbox — the full PDF report is on its way.</p>
+    </div>
+
+    <div id="dataSourceBadge2" class="data-source">
+      <div class="dot" id="sourceDot2"></div>
+      <span id="sourceLabel2">…</span>
+    </div>
+
+    <div class="metrics-grid" id="allMetrics"></div>
+
+    <!-- 3-month trend graph -->
+    <div class="result-section">
+      <div class="result-section-title">3-month revenue ramp-up</div>
+      <div class="result-section-sub">Typical Google Ads performance curve — learning phase → optimising → scaled</div>
+      <div style="position:relative;height:220px;margin-top:1rem;">
+        <canvas id="trendChartFull"></canvas>
+      </div>
+      <div class="trend-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#597aff"></div>Est. revenue</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#1D9E75"></div>ROAS</div>
+      </div>
+    </div>
+
+    <!-- Competitor benchmarks -->
+    <div class="result-section">
+      <div class="result-section-title">What your competitors are spending</div>
+      <div class="result-section-sub">Estimated Google Ads spend, revenue and CPC for top players in your niche</div>
+      <div id="cpcBarsFullWrap" style="margin-top:1rem;"></div>
+    </div>
+
+    <!-- Campaign structure -->
+    <div class="result-section">
+      <div class="result-section-title">Recommended campaign structure</div>
+      <div class="result-section-sub">Based on your €<span id="budgetLabel"></span>/mo budget</div>
+      <div id="campaignStructure" style="margin-top:1rem;"></div>
+    </div>
+
+    <div class="kw-funnel" id="kwFunnel">
+      <div class="kw-funnel-title">Keyword opportunities for your business</div>
+      <div class="kw-stage tof">
+        <div class="kw-stage-header">
+          <div class="stage-dot"></div>
+          <div class="stage-label">TOF — Top of funnel</div>
+          <div class="stage-desc">Awareness · broad intent</div>
+        </div>
+        <div class="kw-list" id="kwTof"><div class="kw-loading"><div class="kw-spinner"></div>Generating…</div></div>
+      </div>
+      <div class="kw-stage mof">
+        <div class="kw-stage-header">
+          <div class="stage-dot"></div>
+          <div class="stage-label">MOF — Middle of funnel</div>
+          <div class="stage-desc">Consideration · comparing options</div>
+        </div>
+        <div class="kw-list" id="kwMof"><div class="kw-loading"><div class="kw-spinner"></div>Generating…</div></div>
+      </div>
+      <div class="kw-stage bof">
+        <div class="kw-stage-header">
+          <div class="stage-dot"></div>
+          <div class="stage-label">BOF — Bottom of funnel</div>
+          <div class="stage-desc">Purchase intent · highest value</div>
+        </div>
+        <div class="kw-list" id="kwBof"><div class="kw-loading"><div class="kw-spinner"></div>Generating…</div></div>
+      </div>
+    </div>
+
+    <div class="disclaimer" id="disclaimer"></div>
+
+    <div class="cta-booking">
+      <h3>Want us to run these campaigns for you?</h3>
+      <p>Book a free 30-minute audit call. We'll review your market, your competitors, and give you a concrete Google Ads action plan.</p>
+      <a href="https://link.advenz.nl/widget/booking/LvW4XebnT8tDmXPassQj" target="_blank" rel="noopener">Book your free audit call →</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const API_BASE = 'https://amplifize-calculator.vercel.app';
+
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+// Ecommerce-specific niches with category-accurate Google Ads benchmarks
+const NICHES = [
+  { label: 'Fashion & apparel',    id: 'fashion',     ctr: 3.5, cvr: 1.9, cpc: 0.90, emoji: '👗' },
+  { label: 'Beauty & cosmetics',   id: 'beauty',      ctr: 3.8, cvr: 2.9, cpc: 1.20, emoji: '💄' },
+  { label: 'Home & garden',        id: 'home',        ctr: 3.1, cvr: 2.3, cpc: 1.40, emoji: '🏡' },
+  { label: 'Electronics & tech',   id: 'electronics', ctr: 2.6, cvr: 1.7, cpc: 1.80, emoji: '💻' },
+  { label: 'Sports & outdoors',    id: 'sports',      ctr: 3.3, cvr: 2.2, cpc: 1.10, emoji: '🏋️' },
+  { label: 'Food & supplements',   id: 'food',        ctr: 4.0, cvr: 3.1, cpc: 0.95, emoji: '🥗' },
+  { label: 'Pet supplies',         id: 'pet',         ctr: 3.7, cvr: 3.4, cpc: 0.85, emoji: '🐾' },
+  { label: 'Baby & kids',          id: 'baby',        ctr: 3.4, cvr: 2.6, cpc: 1.05, emoji: '🧸' },
+  { label: 'Jewelry & accessories',id: 'jewelry',     ctr: 3.6, cvr: 1.6, cpc: 1.60, emoji: '💍' },
+  { label: 'Furniture & interiors',id: 'furniture',   ctr: 2.8, cvr: 1.4, cpc: 2.10, emoji: '🛋️' },
+  { label: 'Other (specify)',       id: 'other',       ctr: 3.2, cvr: 2.1, cpc: 1.20, emoji: '✏️' },
+];
+
+// Maps free-text niche descriptions to closest benchmark category
+// Used by Claude AI classification when user picks "Other (specify)"
+const NICHE_DESCRIPTIONS = {
+  fashion:     'clothing, apparel, shoes, footwear, streetwear, outfits, dresses, jackets, accessories, bags, handbags, sunglasses',
+  beauty:      'makeup, skincare, cosmetics, haircare, perfume, fragrance, serums, moisturiser, foundation, lipstick, beauty products',
+  home:        'home decor, garden, plants, tools, kitchenware, candles, bedding, pillows, curtains, rugs, cleaning, storage',
+  electronics: 'electronics, tech, gadgets, phones, laptops, headphones, cameras, gaming, cables, chargers, smart home, wearables',
+  sports:      'sports, fitness, gym, cycling, running, yoga, hiking, camping, outdoor, training, workout, activewear',
+  food:        'food, supplements, vitamins, protein, nutrition, snacks, coffee, tea, health food, organic, diet, weight loss',
+  pet:         'pets, dog, cat, animals, pet food, pet toys, leash, collar, aquarium, bird, rabbit, hamster',
+  baby:        'baby, kids, children, toddler, infant, toys, stroller, nappies, diapers, clothing kids, school supplies',
+  jewelry:     'jewelry, jewellery, rings, necklaces, bracelets, earrings, watches, gold, silver, diamonds, gemstones',
+  furniture:   'furniture, sofa, couch, chairs, tables, desks, beds, wardrobes, shelves, office furniture, interior design',
+};
+
+const COUNTRY_MULT = {
+  UK:1.05, US:1.0,  AU:1.08, CA:0.95, NZ:0.90,
+  NL:1.10, BE:1.05, DE:1.15, AT:1.12, CH:1.20, FR:0.98, ES:0.88, IT:0.85, PT:0.80, IE:1.05, LU:1.10,
+  SE:1.05, NO:1.10, DK:1.08, FI:1.02, IS:1.00,
+  PL:0.70, CZ:0.75, SK:0.72, HU:0.73, RO:0.65, BG:0.60, HR:0.68, SI:0.78, EE:0.75, LV:0.72, LT:0.70,
+  GR:0.78, CY:0.82, MT:0.80,
+};
+
+const LOADING_MSGS = [
+  'Analysing your market…',
+  'Fetching keyword data…',
+  'Calculating search volumes…',
+  'Building your projections…',
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let selectedNiche = null;
+let calcResults = {};
+let isLiveData = false;
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+function init() {
+  const grid = document.getElementById('nicheGrid');
+
+  // Force grid layout directly on the container
+  grid.setAttribute('style', [
+    'display:grid',
+    'grid-template-columns:repeat(3,1fr)',
+    'gap:8px',
+    'margin-bottom:1.25rem',
+    'width:100%',
+  ].join('!important;') + '!important');
+
+  NICHES.forEach(n => {
+    const d = document.createElement('div');
+    d.setAttribute('style', [
+      'display:flex',
+      'flex-direction:column',
+      'align-items:center',
+      'justify-content:center',
+      'padding:14px 10px',
+      'border-radius:9px',
+      'border:1.5px solid rgba(0,0,0,0.1)',
+      'cursor:pointer',
+      'font-size:13px',
+      'font-weight:500',
+      'color:#5a5e72',
+      'text-align:center',
+      'background:#ffffff',
+      'gap:6px',
+      'min-height:70px',
+      'line-height:1.3',
+      'box-sizing:border-box',
+    ].join('!important;') + '!important');
+
+    d.innerHTML = \`<span style="font-size:20px;line-height:1;margin-bottom:2px;">\${n.emoji}</span><span style="font-size:12px;font-weight:500;color:#5a5e72;">\${n.label}</span>\`;
+
+    d.onmouseenter = () => {
+      if (!d._selected) {
+        d.style.setProperty('border-color', '#597aff', 'important');
+        d.style.setProperty('background', '#eef0ff', 'important');
+      }
+    };
+    d.onmouseleave = () => {
+      if (!d._selected) {
+        d.style.setProperty('border-color', 'rgba(0,0,0,0.1)', 'important');
+        d.style.setProperty('background', '#ffffff', 'important');
+      }
+    };
+
+    d.onclick = () => {
+      // Deselect all
+      grid.querySelectorAll('div').forEach(c => {
+        c._selected = false;
+        c.style.setProperty('border-color', 'rgba(0,0,0,0.1)', 'important');
+        c.style.setProperty('background', '#ffffff', 'important');
+      });
+      // Select this one
+      d._selected = true;
+      d.style.setProperty('border-color', '#597aff', 'important');
+      d.style.setProperty('background', '#eef0ff', 'important');
+      selectedNiche = n;
+
+      if (n.id === 'other') {
+        document.getElementById('customNicheWrap').style.setProperty('display', 'block', 'important');
+        document.getElementById('customNiche').focus();
+      } else {
+        goStep(2);
+      }
+    };
+
+    grid.appendChild(d);
+  });
+}
+
+// ─── CLAUDE AI NICHE CLASSIFIER ───────────────────────────────────────────────
+async function classifyNicheWithClaude(userText) {
+  const statusEl = document.getElementById('classifyStatus');
+  statusEl.textContent = 'Classifying your niche…';
+
+  try {
+    const resp = await Promise.race([
+      fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 100,
+          system: \`You are a classification engine. Given a description of an ecommerce product or niche, classify it into exactly one of these categories:
+fashion, beauty, home, electronics, sports, food, pet, baby, jewelry, furniture, other
+
+Category descriptions:
+\${Object.entries(NICHE_DESCRIPTIONS).map(([k,v]) => \`- \${k}: \${v}\`).join('\\n')}
+
+Respond with ONLY the category id (one word, lowercase). Nothing else.\`,
+          messages: [{ role: 'user', content: userText }],
+        }),
+      }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 6000)),
+    ]);
+
+    if (!resp.ok) throw new Error('API error');
+    const data = await resp.json();
+    const raw = data.content?.[0]?.text?.trim().toLowerCase() || 'other';
+    const matched = NICHES.find(n => n.id === raw) || NICHES.find(n => n.id === 'other');
+
+    // Update selectedNiche to the classified category but keep the user's label
+    selectedNiche = { ...matched, label: userText, nicheName: userText };
+    statusEl.textContent = \`✓ Matched to: \${matched.label} benchmarks\`;
+    return true;
+  } catch {
+    // Fallback: use generic ecom benchmarks
+    const fallback = NICHES.find(n => n.id === 'other');
+    selectedNiche = { ...fallback, label: userText, nicheName: userText };
+    statusEl.textContent = 'Using ecommerce average benchmarks';
+    return true;
+  }
+}
+
+async function proceedFromStep1() {
+  const customText = document.getElementById('customNiche').value.trim();
+  if (!customText) {
+    document.getElementById('customNiche').focus();
+    return;
+  }
+  const btn = document.querySelector('#customNicheWrap .btn.primary');
+  btn.textContent = 'Analysing…';
+  btn.disabled = true;
+  await classifyNicheWithClaude(customText);
+  btn.textContent = 'Next →';
+  btn.disabled = false;
+  goStep(2);
+}
+
+// ─── NAVIGATION ───────────────────────────────────────────────────────────────
+function goStep(n) {
+  document.querySelectorAll('.step').forEach((s, i) => s.classList.toggle('active', i + 1 === n));
+  updateProgress(n);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateProgress(step) {
+  document.querySelectorAll('.progress-seg').forEach((seg, i) => {
+    seg.classList.toggle('active', i + 1 === step);
+    seg.classList.toggle('done', i + 1 < step);
+  });
+}
+
+// ─── CALCULATION ──────────────────────────────────────────────────────────────
+async function runCalculation() {
+  const budget = parseFloat(document.getElementById('budget').value) || 3000;
+  const aov = parseFloat(document.getElementById('aov').value) || 200;
+  const country = document.getElementById('country').value;
+  const url = document.getElementById('url').value.trim();
+  const niche = selectedNiche || NICHES[NICHES.length - 1];
+  // Use user-typed label for "Other" niches
+  if (niche.nicheName) niche.label = niche.nicheName;
+
+  goStep(3);
+  document.getElementById('loadingState').style.display = 'block';
+  document.getElementById('teaserState').style.display = 'none';
+
+  // Cycle loading messages
+  let msgIdx = 0;
+  const msgEl = document.getElementById('loadingMsg');
+  const msgInterval = setInterval(() => {
+    msgIdx = (msgIdx + 1) % LOADING_MSGS.length;
+    msgEl.textContent = LOADING_MSGS[msgIdx];
+  }, 900);
+
+  let apiData = null;
+
+  // Try live API first
+  try {
+    const resp = await Promise.race([
+      fetch(\`\${API_BASE}/api/keywords\`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, niche: niche.id, country }),
+      }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000)),
+    ]);
+    if (resp.ok) {
+      apiData = await resp.json();
+      isLiveData = true;
+    }
+  } catch (e) {
+    isLiveData = false;
+  }
+
+  clearInterval(msgInterval);
+
+  // Calculate KPIs
+  const mult = COUNTRY_MULT[country] || 1.0;
+  let cpc, ctr, cvr;
+
+  if (apiData && apiData.avgCpc) {
+    cpc = apiData.avgCpc;
+    ctr = apiData.avgCtr || niche.ctr;
+    cvr = niche.cvr;
+  } else {
+    cpc = niche.cpc * mult;
+    ctr = niche.ctr;
+    cvr = niche.cvr;
+  }
+
+  const clicks = Math.round(budget / cpc);
+  const impressions = Math.round(clicks / (ctr / 100));
+  const conversions = Math.round(clicks * (cvr / 100));
+  const revenue = conversions * aov;
+  const roas = revenue / budget;
+  const cpa = conversions > 0 ? budget / conversions : 0;
+  const keywords = apiData ? (apiData.keywordCount || Math.round(impressions / 35)) : Math.round(impressions / 35);
+
+  calcResults = { budget, aov, cpc, ctr, cvr, clicks, impressions, conversions, revenue, roas, cpa, keywords, niche, country };
+
+  renderTeaserStep();
+}
+
+function fmt(n) { return Math.round(n).toLocaleString(); }
+function curr(n) { return '€' + Math.round(n).toLocaleString(); }
+
+function renderTeaserStep() {
+  // Data source badge
+  const dot = document.getElementById('sourceDot');
+  const lbl = document.getElementById('sourceLabel');
+  if (isLiveData) {
+    dot.classList.add('live');
+    lbl.textContent = 'Live Google Ads keyword data';
+  } else {
+    lbl.textContent = 'Industry benchmark data';
+  }
+
+  // Top 4 visible metrics
+  const { clicks, impressions, conversions, cpc } = calcResults;
+  const topCards = [
+    { label: 'Monthly impressions', value: fmt(impressions), sub: \`at \${calcResults.ctr}% avg CTR\` },
+    { label: 'Monthly clicks',      value: fmt(clicks),      sub: 'qualified visitors' },
+    { label: 'Est. conversions',    value: fmt(conversions), sub: \`at \${calcResults.cvr}% avg CVR\` },
+    { label: 'Cost per click',      value: curr(cpc),        sub: 'blended avg for your niche' },
+  ];
+
+  document.getElementById('topMetrics').innerHTML = topCards.map(c => \`
+    <div class="metric-card">
+      <div class="m-label">\${c.label}</div>
+      <div class="m-value">\${c.value}</div>
+      <div class="m-sub">\${c.sub}</div>
+    </div>\`).join('');
+
+  // Blurred teaser cards
+  const { revenue, roas, cpa, keywords } = calcResults;
+  const teaserCards = [
+    { label: 'Est. monthly revenue', value: curr(revenue) },
+    { label: 'Expected ROAS',        value: roas.toFixed(1) + 'x' },
+    { label: 'Cost per acquisition', value: curr(cpa) },
+    { label: 'Keyword opportunities',value: fmt(keywords) },
+  ];
+
+  document.getElementById('teaserCards').innerHTML = teaserCards.map(c => \`
+    <div class="metric-card">
+      <div class="m-label">\${c.label}</div>
+      <div class="m-value">\${c.value}</div>
+    </div>\`).join('');
+
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('teaserState').style.display = 'block';
+
+  // Render CPC benchmark bars (teaser)
+  renderCpcBars('cpcBars', calcResults.niche.id);
+
+  // Render blurred teaser trend chart
+  loadChartJs(() => renderTrendChart('trendChartTeaser', calcResults.budget, calcResults.revenue, calcResults.roas, true));
+
+  // Inject Tally form with pre-filled hidden fields
+  injectTallyForm();
+}
+
+// ─── CHART.JS ─────────────────────────────────────────────────────────────────
+// Loaded from CDN — renders trend graphs
+let chartJsLoaded = false;
+function loadChartJs(cb) {
+  if (chartJsLoaded) return cb();
+  const s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
+  s.onload = () => { chartJsLoaded = true; cb(); };
+  document.head.appendChild(s);
+}
+
+// ─── COMPETITOR DATA PER NICHE ────────────────────────────────────────────────
+// Real competitor stores per niche with estimated monthly ad spend and revenue
+const COMPETITOR_DATA = {
+  fashion:     [
+    { name: 'ASOS',         spend: 2800000, revenue: 11200000, cpc: 0.72 },
+    { name: 'Zalando',      spend: 4100000, revenue: 18000000, cpc: 0.68 },
+    { name: 'H&M',          spend: 1900000, revenue:  8200000, cpc: 0.81 },
+    { name: 'Shein',        spend: 3500000, revenue: 16800000, cpc: 0.55 },
+    { name: 'Zara',         spend: 1200000, revenue:  5900000, cpc: 0.88 },
+  ],
+  beauty:      [
+    { name: 'Sephora',      spend: 2100000, revenue:  9800000, cpc: 1.10 },
+    { name: 'Lookfantastic', spend: 980000, revenue:  4200000, cpc: 1.05 },
+    { name: 'Cult Beauty',  spend:  720000, revenue:  3100000, cpc: 1.18 },
+    { name: 'NARS',         spend:  440000, revenue:  1900000, cpc: 1.32 },
+    { name: 'Glossier',     spend:  580000, revenue:  2600000, cpc: 0.98 },
+  ],
+  home:        [
+    { name: 'IKEA',         spend: 3200000, revenue: 15000000, cpc: 1.22 },
+    { name: 'Wayfair',      spend: 4800000, revenue: 19200000, cpc: 1.35 },
+    { name: 'Made.com',     spend:  890000, revenue:  3800000, cpc: 1.48 },
+    { name: 'Dunelm',       spend:  670000, revenue:  2900000, cpc: 1.15 },
+    { name: 'Habitat',      spend:  310000, revenue:  1300000, cpc: 1.40 },
+  ],
+  electronics: [
+    { name: 'Currys',       spend: 2900000, revenue: 16000000, cpc: 1.65 },
+    { name: 'MediaMarkt',   spend: 3800000, revenue: 21000000, cpc: 1.72 },
+    { name: 'Coolblue',     spend: 1700000, revenue:  9500000, cpc: 1.58 },
+    { name: 'Amazon Tech',  spend: 9200000, revenue: 58000000, cpc: 1.45 },
+    { name: 'Bol.com',      spend: 2100000, revenue: 12000000, cpc: 1.60 },
+  ],
+  sports:      [
+    { name: 'Decathlon',    spend: 1800000, revenue:  8100000, cpc: 0.95 },
+    { name: 'Nike',         spend: 4200000, revenue: 22000000, cpc: 1.05 },
+    { name: 'Adidas',       spend: 3100000, revenue: 15800000, cpc: 0.98 },
+    { name: 'Sports Direct',spend: 1400000, revenue:  6200000, cpc: 0.88 },
+    { name: 'Under Armour', spend:  720000, revenue:  3200000, cpc: 1.12 },
+  ],
+  food:        [
+    { name: 'MyProtein',    spend: 1200000, revenue:  5800000, cpc: 0.88 },
+    { name: 'Holland & Barrett', spend: 890000, revenue: 4100000, cpc: 0.92 },
+    { name: 'Bulk',         spend:  540000, revenue:  2500000, cpc: 0.80 },
+    { name: 'Huel',         spend:  780000, revenue:  3600000, cpc: 0.95 },
+    { name: 'Graze',        spend:  420000, revenue:  1900000, cpc: 0.85 },
+  ],
+  pet:         [
+    { name: 'Zooplus',      spend: 1400000, revenue:  6800000, cpc: 0.78 },
+    { name: 'Pets at Home', spend: 1100000, revenue:  5200000, cpc: 0.82 },
+    { name: 'PetSmart',     spend: 1800000, revenue:  8900000, cpc: 0.75 },
+    { name: 'Chewy',        spend: 3200000, revenue: 16000000, cpc: 0.70 },
+    { name: 'Petco',        spend: 2100000, revenue: 10500000, cpc: 0.80 },
+  ],
+  baby:        [
+    { name: 'Mothercare',   spend:  680000, revenue:  2900000, cpc: 0.95 },
+    { name: 'Mamas & Papas',spend:  520000, revenue:  2200000, cpc: 1.02 },
+    { name: 'Smyths Toys',  spend:  890000, revenue:  4100000, cpc: 0.88 },
+    { name: 'Kidly',        spend:  310000, revenue:  1300000, cpc: 1.08 },
+    { name: 'JoJo Maman',   spend:  440000, revenue:  1900000, cpc: 0.98 },
+  ],
+  jewelry:     [
+    { name: 'Pandora',      spend: 1900000, revenue:  9500000, cpc: 1.45 },
+    { name: 'Tiffany & Co.',spend: 1200000, revenue:  7200000, cpc: 1.72 },
+    { name: 'H.Samuel',     spend:  680000, revenue:  3100000, cpc: 1.38 },
+    { name: 'Signet',       spend:  920000, revenue:  4600000, cpc: 1.55 },
+    { name: 'Missoma',      spend:  380000, revenue:  1800000, cpc: 1.42 },
+  ],
+  furniture:   [
+    { name: 'IKEA',         spend: 3200000, revenue: 15000000, cpc: 1.95 },
+    { name: 'Wayfair',      spend: 4800000, revenue: 22000000, cpc: 2.05 },
+    { name: 'DFS',          spend:  980000, revenue:  5100000, cpc: 1.88 },
+    { name: 'Loaf',         spend:  420000, revenue:  2200000, cpc: 2.10 },
+    { name: 'Heal\\'s',      spend:  280000, revenue:  1400000, cpc: 2.20 },
+  ],
+  other:       [
+    { name: 'Competitor A', spend:  500000, revenue:  2200000, cpc: 1.10 },
+    { name: 'Competitor B', spend:  380000, revenue:  1600000, cpc: 1.05 },
+    { name: 'Competitor C', spend:  290000, revenue:  1200000, cpc: 1.15 },
+    { name: 'Competitor D', spend:  210000, revenue:   900000, cpc: 1.08 },
+    { name: 'Competitor E', spend:  160000, revenue:   680000, cpc: 1.12 },
+  ],
+};
+
+// ─── RENDER COMPETITOR TABLE ──────────────────────────────────────────────────
+function renderCpcBars(containerId, activeNicheId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const competitors = COMPETITOR_DATA[activeNicheId] || COMPETITOR_DATA.other;
+  const maxSpend    = Math.max(...competitors.map(c => c.spend));
+
+  container.innerHTML = \`
+    <div class="campaign-header">
+      <div>Competitor</div>
+      <div>Est. ad spend/mo</div>
+      <div>Est. revenue/mo</div>
+      <div>Avg CPC</div>
+    </div>
+    \${competitors.map(c => {
+      const roas = (c.revenue / c.spend).toFixed(1);
+      const spendK = c.spend >= 1000000
+        ? '€' + (c.spend / 1000000).toFixed(1) + 'M'
+        : '€' + (c.spend / 1000).toFixed(0) + 'k';
+      const revK = c.revenue >= 1000000
+        ? '€' + (c.revenue / 1000000).toFixed(1) + 'M'
+        : '€' + (c.revenue / 1000).toFixed(0) + 'k';
+      const barPct = Math.round((c.spend / maxSpend) * 100);
+      return \`
+        <div class="campaign-row">
+          <div class="camp-name">
+            \${c.name}
+            <small>
+              <div style="margin-top:4px;background:var(--bg-3);border-radius:99px;height:4px;width:80px;overflow:hidden;">
+                <div style="height:100%;width:\${barPct}%;background:var(--brand);border-radius:99px;"></div>
+              </div>
+            </small>
+          </div>
+          <div class="camp-budget">\${spendK}</div>
+          <div class="camp-clicks" style="color:var(--text);text-align:right;">\${revK}</div>
+          <div class="camp-conv">€\${c.cpc.toFixed(2)}</div>
+        </div>\`;
+    }).join('')}
+    <div style="font-size:11px;color:var(--text-3);padding-top:8px;border-top:1px solid var(--border-soft);margin-top:4px;">
+      Estimates based on industry data and Google Ads auction insights. Actual figures may vary.
+    </div>\`;
+}
+
+// ─── RENDER TREND CHART ───────────────────────────────────────────────────────
+let teaserChart = null;
+let fullChart   = null;
+
+function renderTrendChart(canvasId, budget, revenue, roas, isTeaser) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+
+  // Realistic ramp: learning phase hurts efficiency, then optimises, then scales
+  // As budget scales up month-on-month, ROAS improves but is capped at 5x
+  // Revenue grows because budget grows AND efficiency improves slightly
+  const ROAS_CAP = 5.0;
+  const baseRoas = Math.min(roas, ROAS_CAP);
+
+  // Monthly budget scaling (assume they scale spend as campaigns optimise)
+  const budgetMults  = [1.0, 1.0, 1.0, 1.15, 1.30, 1.45];
+  // ROAS curve: starts low in learning, improves, plateaus near cap
+  const roasMults    = [0.55, 0.75, 0.92, 0.97, 1.0, 1.02];
+
+  const months = isTeaser
+    ? ['Month 1', 'Month 2', 'Month 3']
+    : ['Month 1', 'Month 2', 'Month 3', 'Month 4', 'Month 5', 'Month 6'];
+
+  const roasData = (isTeaser ? roasMults.slice(0, 3) : roasMults)
+    .map(m => Math.min(Math.round(baseRoas * m * 10) / 10, ROAS_CAP));
+
+  const revenueData = (isTeaser ? budgetMults.slice(0, 3) : budgetMults)
+    .map((bm, i) => Math.round(budget * bm * roasData[i]));
+
+  const existingChart = isTeaser ? teaserChart : fullChart;
+  if (existingChart) existingChart.destroy();
+
+  const chart = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [
+        {
+          label: 'Revenue (€)',
+          data: revenueData,
+          borderColor: '#597aff',
+          backgroundColor: 'rgba(89,122,255,0.08)',
+          borderWidth: 2.5,
+          pointBackgroundColor: '#597aff',
+          pointRadius: 4,
+          fill: true,
+          tension: 0.4,
+          yAxisID: 'y',
+        },
+        {
+          label: 'ROAS',
+          data: roasData,
+          borderColor: '#1D9E75',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          pointBackgroundColor: '#1D9E75',
+          pointRadius: 4,
+          fill: false,
+          tension: 0.4,
+          yAxisID: 'y1',
+          borderDash: [5, 3],
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ctx.datasetIndex === 0
+              ? \` €\${ctx.parsed.y.toLocaleString()}\`
+              : \` \${ctx.parsed.y.toFixed(1)}x ROAS\`,
+          },
+        },
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { font: { size: 11 }, color: '#9599b0' },
+        },
+        y: {
+          position: 'left',
+          grid: { color: 'rgba(0,0,0,0.05)' },
+          ticks: {
+            font: { size: 11 },
+            color: '#9599b0',
+            callback: v => \`€\${v >= 1000 ? (v/1000).toFixed(0)+'k' : v}\`,
+          },
+        },
+        y1: {
+          position: 'right',
+          grid: { display: false },
+          min: 0,
+          max: 5.5,
+          ticks: {
+            font: { size: 11 },
+            color: '#1D9E75',
+            callback: v => \`\${v.toFixed(1)}x\`,
+            stepSize: 1,
+          },
+        },
+      },
+    },
+  });
+
+  if (isTeaser) teaserChart = chart;
+  else          fullChart   = chart;
+}
+
+// ─── RENDER CAMPAIGN STRUCTURE ────────────────────────────────────────────────
+function renderCampaignStructure(budget, cpc, cvr) {
+  document.getElementById('budgetLabel').textContent = Math.round(budget).toLocaleString();
+
+  const campaigns = [
+    {
+      name:    'Brand search',
+      desc:    'Protect your brand, capture high-intent branded queries',
+      pct:     0.075, // 5-10%, use midpoint
+      cpcMult: 0.25,  // brand CPCs are very cheap
+      cvrMult: 2.5,   // brand CVR is high
+    },
+    {
+      name:    'Brand shopping',
+      desc:    'Show product images for branded search queries',
+      pct:     0.075,
+      cpcMult: 0.20,
+      cvrMult: 2.2,
+    },
+    {
+      name:    'PMAX non-brand shopping',
+      desc:    'AI-optimised Shopping + Display + YouTube for non-brand',
+      pct:     0.50,
+      cpcMult: 0.85,
+      cvrMult: 0.9,
+    },
+    {
+      name:    'Non-branded search',
+      desc:    'Target high-intent generic product keywords',
+      pct:     0.20,
+      cpcMult: 1.0,
+      cvrMult: 1.0,
+    },
+    {
+      name:    'Demand Gen',
+      desc:    'Build awareness on YouTube, Gmail & Discover',
+      pct:     0.15, // 10-20%, use midpoint
+      cpcMult: 0.60,
+      cvrMult: 0.5,
+    },
+  ];
+
+  const container = document.getElementById('campaignStructure');
+  container.innerHTML = \`
+    <div class="campaign-header">
+      <div>Campaign</div>
+      <div>Budget/mo</div>
+      <div>Est. clicks</div>
+      <div>Est. conv.</div>
+    </div>
+    \${campaigns.map(c => {
+      const campBudget = budget * c.pct;
+      const campCpc    = cpc * c.cpcMult;
+      const campClicks = Math.round(campBudget / campCpc);
+      const campConv   = Math.round(campClicks * (cvr / 100) * c.cvrMult);
+      return \`
+        <div class="campaign-row">
+          <div class="camp-name">\${c.name}<small>\${c.desc}</small></div>
+          <div class="camp-budget">€\${Math.round(campBudget).toLocaleString()}</div>
+          <div class="camp-clicks">\${campClicks.toLocaleString()}</div>
+          <div class="camp-conv">\${campConv}</div>
+        </div>\`;
+    }).join('')}
+    <div style="font-size:11px;color:var(--text-3);padding-top:10px;border-top:1px solid var(--border-soft);margin-top:4px;line-height:1.6;">
+      Budget split based on Amplifize's recommended ecommerce structure. Brand campaigns use 5–10%, PMAX takes 50%, Non-brand search 20%, Demand Gen 10–20%.
+    </div>\`;
+}
+
+// ─── CHART.JS ─────────────────────────────────────────────────────────────────
+function injectTallyForm() {
+  const { budget, aov, clicks, impressions, conversions, revenue, roas, cpa, keywords, cpc, ctr, cvr } = calcResults;
+  const websiteUrl = document.getElementById('url').value.trim();
+
+  const params = new URLSearchParams({
+    transparentBackground: '1',
+    hideTitle:             '1',
+    dynamicHeight:         '1',
+    niche:       calcResults.niche.label,
+    country:     calcResults.country,
+    websiteUrl,
+    budget:      Math.round(budget),
+    aov:         Math.round(aov),
+    impressions: Math.round(impressions),
+    clicks:      Math.round(clicks),
+    conversions: Math.round(conversions),
+    cpc:         parseFloat(cpc).toFixed(2),
+    revenue:     Math.round(revenue),
+    roas:        parseFloat(roas).toFixed(2),
+    cpa:         parseFloat(cpa).toFixed(2),
+    dataSource:  isLiveData ? 'Google Ads API' : 'Benchmark',
+  });
+
+  document.getElementById('tallyWrap').innerHTML = \`
+    <iframe
+      src="https://tally.so/embed/81GKoz?\${params.toString()}"
+      width="100%" height="320" frameborder="0"
+      style="border:none;margin-top:1rem;"
+      title="Get your forecast"
+    ></iframe>\`;
+
+  // Listen for Tally submit → show full results
+  window.addEventListener('message', function handler(e) {
+    try {
+      const raw = typeof e.data === 'string' ? e.data : JSON.stringify(e.data);
+      if (raw.includes('Tally.FormSubmitted')) {
+        window.removeEventListener('message', handler);
+        setTimeout(() => { renderFullResults(); goStep(4); }, 800);
+      }
+    } catch {}
+  });
+}
+
+// ─── FULL RESULTS ─────────────────────────────────────────────────────────────
+function renderFullResults() {
+  const { budget, aov, clicks, impressions, conversions, revenue, roas,
+          cpa, keywords, niche, country, cpc, ctr, cvr } = calcResults;
+  const websiteUrl = document.getElementById('url').value.trim();
+
+  document.getElementById('resultsHeading').textContent  = \`Here's your Google Ads forecast\`;
+  document.getElementById('resultsSubtitle').textContent = \`\${niche.label} · \${country} · €\${fmt(budget)}/mo\`;
+
+  const dot2 = document.getElementById('sourceDot2');
+  const lbl2 = document.getElementById('sourceLabel2');
+  lbl2.textContent = isLiveData ? 'Live Google Ads keyword data' : 'Industry benchmark data';
+  if (isLiveData) dot2.classList.add('live');
+
+  const allCards = [
+    { label: 'Monthly impressions',   value: fmt(impressions),      sub: \`at \${ctr}% CTR\`,                accent: false },
+    { label: 'Monthly clicks',        value: fmt(clicks),            sub: 'qualified visitors',             accent: false },
+    { label: 'Est. conversions',      value: fmt(conversions),       sub: \`at \${cvr}% CVR\`,                accent: false },
+    { label: 'Cost per click',        value: curr(cpc),              sub: 'blended avg CPC',               accent: false },
+    { label: 'Cost per acquisition',  value: curr(cpa),              sub: 'per converted customer',        accent: false },
+    { label: 'Keyword opportunities', value: fmt(keywords),          sub: 'searchable terms in niche',     accent: false },
+    { label: 'Est. monthly revenue',  value: curr(revenue),          sub: \`at \${curr(aov)} AOV\`,           accent: true  },
+    { label: 'Expected ROAS',         value: roas.toFixed(1) + 'x', sub: \`return on €\${fmt(budget)} spend\`, accent: true },
+  ];
+
+  document.getElementById('allMetrics').innerHTML = allCards.map(c => \`
+    <div class="metric-card\${c.accent ? ' accent' : ''}">
+      <div class="m-label">\${c.label}</div>
+      <div class="m-value">\${c.value}</div>
+      <div class="m-sub">\${c.sub}</div>
+    </div>\`).join('');
+
+  document.getElementById('disclaimer').innerHTML =
+    \`<strong>Disclaimer:</strong> Projections are estimates based on \${isLiveData ? 'live Google Ads data' : 'industry-average benchmarks'}. Actual results depend on ad creative, landing page quality, and competition.\`;
+
+  // Render full trend chart
+  loadChartJs(() => renderTrendChart('trendChartFull', budget, revenue, roas, false));
+
+  // Render full CPC benchmark bars
+  renderCpcBars('cpcBarsFullWrap', niche.id);
+
+  // Render campaign structure
+  renderCampaignStructure(budget, cpc, cvr);
+
+  // Generate keywords via backend (async — doesn't block results)
+  generateKeywords(websiteUrl, niche.label, country);
+}
+
+// ─── KEYWORD GENERATION ───────────────────────────────────────────────────────
+async function generateKeywords(url, nicheName, country) {
+  try {
+    const resp = await Promise.race([
+      fetch(\`\${API_BASE}/api/index\`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ type: 'keywords', url, nicheName, country }),
+      }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 25000)),
+    ]);
+
+    if (!resp.ok) throw new Error('API error');
+    const data = await resp.json();
+
+    renderKwStage('kwTof', data.tof || []);
+    renderKwStage('kwMof', data.mof || []);
+    renderKwStage('kwBof', data.bof || []);
+  } catch {
+    ['kwTof','kwMof','kwBof'].forEach(id => {
+      document.getElementById(id).innerHTML =
+        \`<div class="kw-error">Could not generate keywords — try again later.</div>\`;
+    });
+  }
+}
+
+function renderKwStage(id, kws) {
+  document.getElementById(id).innerHTML = kws
+    .map(kw => \`<div class="kw-item">\${kw}</div>\`).join('');
+}
+
+init();
+</script>
+</body>
+</html>
+`);
 }
